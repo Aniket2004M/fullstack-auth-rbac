@@ -2,6 +2,7 @@ package com.botmakers.rbac.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,11 +14,16 @@ public class JwtUtil {
     private String SECRET;
 
     @Value("${jwt.expiration}")
-    private String EXPIRATION;
+    private Long EXPIRATION;
 
     //tokenMailGenerate
     public String generateToken(String email) {
-        return Jwts.builder().setSubject(email).setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + EXPIRATION)).compact();
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
+                .signWith(SignatureAlgorithm.ES256,SECRET.getBytes())
+                .compact();
     }
 
     //getGmailFromToken
@@ -36,7 +42,7 @@ public class JwtUtil {
     }
 
     private Claims getClaims(String token) {
-        return Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token).getBody();
+        return Jwts.parser().setSigningKey(SECRET.getBytes()).parseClaimsJws(token).getBody();
     }
 
 }

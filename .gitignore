@@ -1,0 +1,28 @@
+# FRONTEND (React)
+node_modules/
+dist/
+.env
+
+
+# BACKEND (Spring Boot)
+target/
+*.log
+.mvn/
+
+# Ignore compiled files
+*.class
+
+# Maven wrapper logs
+.mvn/wrapper/maven-wrapper.jar
+
+
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+
+# OS FILES
+.DS_Store
+Thumbs.db

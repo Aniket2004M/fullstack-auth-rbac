@@ -29,7 +29,7 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
-    // USER rndpoint
+    // USER endpoint
     @GetMapping("/user")
     public String userEndpoint(){
         return "Hello User !!!! this is the USER endpoint";
