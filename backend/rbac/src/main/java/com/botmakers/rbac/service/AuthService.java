@@ -1,40 +1,45 @@
+// src/main/java/com/botmakers./rbac/service/AuthService.java
 package com.botmakers.rbac.service;
 
-import com.botmakers.rbac.dto.LoginRequest;
+import com.botmakers.rbac.dto.AuthRequest;
+import com.botmakers.rbac.dto.AuthResponse;
 import com.botmakers.rbac.dto.RegisterRequest;
 import com.botmakers.rbac.entity.User;
 import com.botmakers.rbac.repository.UserRepository;
-import com.botmakers.rbac.security.JwtUtil;
+import com.botmakers.rbac.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-@Service @RequiredArgsConstructor
+@Service
+@RequiredArgsConstructor
 public class AuthService {
-    private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder;
 
-    //registerUser
-    public void register(RegisterRequest request){
-        User user=User.builder()
+    private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+
+    public AuthResponse register(RegisterRequest request) {
+        var user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
                 .build();
-
-        userRepository.save(user);
+        repository.save(user);
+        var jwtToken = jwtService.generateToken(user);
+        return AuthResponse.builder().token(jwtToken).build();
     }
 
-    //loginUser
-    public String login(LoginRequest request){
-        User user=userRepository.findByEmail(request.getEmail())
-                .orElseThrow(()->new RuntimeException("User Not Found "));
-
-        if(!passwordEncoder.matches(request.getPassword(),user.getPassword())){
-            throw new RuntimeException("Invalid Credentials");
-        }
-        return jwtUtil.generateToken(user.getEmail());
+    public AuthResponse authenticate(AuthRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+        var user = repository.findByEmail(request.getEmail()).orElseThrow();
+        var jwtToken = jwtService.generateToken(user);
+        return AuthResponse.builder().token(jwtToken).build();
     }
 }
